@@ -37,6 +37,11 @@ const navItems: NavItem[] = [
     path: "/calendar",
   },
   {
+    icon: <PieChartIcon />,
+    name: "Salon Landing Page",
+    path: "/salao/:slug",
+  },
+  {
     icon: <UserCircleIcon />,
     name: "User Profile",
     path: "/profile",
