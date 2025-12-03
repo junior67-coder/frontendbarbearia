@@ -1,17 +1,62 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router-dom"; 
+import { loginUser } from "../../services/authServices"; 
+
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
 
+
 export default function SignInForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  
+  // Estados existentes do template
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  
+  const navigate = useNavigate(); // Para redirecionamento após o login
+
+  // --- FUNÇÃO HANDLER DE SUBMISSÃO ---
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); // Previne o reload da página padrão
+    setError(null);
+    
+    if (!email || !password) {
+      setError("Por favor, preencha o email e a senha.");
+      return;
+    }
+    
+    setLoading(true);
+
+    try {
+      // Chama a função de serviço JWT (baseada em Axios/TypeScript)
+      await loginUser(email, password);
+      
+      console.log("Login Sucedido! Redirecionando...");
+      
+      // Redireciona para o Dashboard principal após o login
+      navigate("/"); 
+
+    } catch (err: any) {
+      // Captura e exibe o erro retornado da API (ex: credenciais inválidas)
+      const errorMessage = err.message || "Falha no login. Verifique suas credenciais.";
+      console.error("Erro de Autenticação:", errorMessage);
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   return (
     <div className="flex flex-col flex-1">
       <div className="w-full max-w-md pt-10 mx-auto">
+        {/* Link alterado para usar o Link do react-router-dom */}
         <Link
           to="/"
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
@@ -31,6 +76,7 @@ export default function SignInForm() {
             </p>
           </div>
           <div>
+            {/* ... Botões de Login Social (Deixados como estão) ... */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
               <button className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
                 <svg
@@ -83,13 +129,25 @@ export default function SignInForm() {
                 </span>
               </div>
             </div>
-            <form>
+            
+            <form onSubmit={handleSubmit}>
               <div className="space-y-6">
+                {error && (
+                    <div className="p-3 mb-4 text-sm font-medium text-error-700 bg-error-100 rounded-lg dark:bg-error-900/50 dark:text-error-400">
+                        {error}
+                    </div>
+                )}
                 <div>
                   <Label>
                     Email <span className="text-error-500">*</span>{" "}
                   </Label>
-                  <Input placeholder="info@gmail.com" />
+                  <Input 
+                      placeholder="info@gmail.com" 
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      
+                  />
                 </div>
                 <div>
                   <Label>
@@ -99,6 +157,9 @@ export default function SignInForm() {
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -127,9 +188,11 @@ export default function SignInForm() {
                   </Link>
                 </div>
                 <div>
-                  <Button className="w-full" size="sm">
-                    Sign in
-                  </Button>
+                  <button type="submit" disabled={loading} className="w-full">
+                    <Button className="w-full" size="sm" disabled={loading}>
+                      {loading ? "Signing In..." : "Sign in"}
+                    </Button>
+                  </button>
                 </div>
               </div>
             </form>
